@@ -43,8 +43,3 @@ ExecuteInGameThread(function()
 		end)
 	end)
 end)
-
-if hooked then
-	UnregisterHook("/Script/Altar.VMainMenuViewModel:LoadInstanceOfLevels", preId, postId)
-	collectgarbage()
-end
