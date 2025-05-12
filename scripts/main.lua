@@ -23,19 +23,28 @@ end
 local config = loadConfig()
 config.press_continue_delay = config.press_continue_delay or 800
 
-RegisterHook("/Script/Altar.VMainMenuViewModel:LoadInstanceOfLevels", function(Context)
-	local objMainMenuViewModel = FindFirstOf("VMainMenuViewModel")
-	local isContinue = objMainMenuViewModel:GetContinueVisibility()
-	if isContinue then
-		objMainMenuViewModel:RegisterSendClickedContinue()
-	end
-	ExecuteWithDelay(config.press_continue_delay, function()
-		local objWBP_ModernMenu_Message_C = WaitForObject("WBP_ModernMenu_Message_C")
-		if objWBP_ModernMenu_Message_C and objWBP_ModernMenu_Message_C:IsValid() then
-			if objWBP_ModernMenu_Message_C:IsVisible() then
-				objWBP_ModernMenu_Message_C:SendClickedButton(0)
-				return true
-			end
+local hooked = false
+ExecuteInGameThread(function()
+	local preId, postId = RegisterHook("/Script/Altar.VMainMenuViewModel:LoadInstanceOfLevels", function(Context)
+		local objMainMenuViewModel = FindFirstOf("VMainMenuViewModel")
+		local isContinue = objMainMenuViewModel:GetContinueVisibility()
+		if isContinue then
+			objMainMenuViewModel:RegisterSendClickedContinue()
 		end
+		ExecuteWithDelay(config.press_continue_delay, function()
+			local objWBP_ModernMenu_Message_C = WaitForObject("WBP_ModernMenu_Message_C")
+			if objWBP_ModernMenu_Message_C and objWBP_ModernMenu_Message_C:IsValid() then
+				if objWBP_ModernMenu_Message_C:IsVisible() then
+					objWBP_ModernMenu_Message_C:SendClickedButton(0)
+					hooked = true
+					return true
+				end
+			end
+		end)
 	end)
 end)
+
+if hooked then
+	UnregisterHook("/Script/Altar.VMainMenuViewModel:LoadInstanceOfLevels", preId, postId)
+	collectgarbage()
+end
